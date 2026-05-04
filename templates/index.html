@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NullGrids Deploy Gateway v3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --surface: #0d0d0d;
+            --primary: #ffd900;
+            --primary-glow: rgba(255, 217, 0, 0.2);
+            --secondary: #00ff66;
+            --text: #e0e0e0;
+            --text-dim: #666;
+            --border: #1a1a1a;
+            --danger: #ff4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Chakra Petch', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Scanning Line Animation */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            opacity: 0.1;
+            z-index: 100;
+            pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        header {
+            padding: 30px 50px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--primary);
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-logo span {
+            transform: rotate(-45deg);
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .brand-text h1 {
+            font-size: 24px;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .status-badge {
+            background: rgba(0, 255, 102, 0.1);
+            color: var(--secondary);
+            border: 1px solid var(--secondary);
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        main {
+            flex: 1;
+            padding: 50px;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .card-header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 18px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Deployment Controls */
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .input-field {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border);
+            color: var(--primary);
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            border-radius: 4px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-deploy {
+            width: 100%;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+        .btn-deploy:hover {
+            background: #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        /* System Info Sidebar */
+        .info-list {
+            list-style: none;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 14px;
+        }
+
+        .info-label { color: var(--text-dim); }
+        .info-value { font-family: 'JetBrains Mono', monospace; }
+
+        /* Output Log */
+        .log-area {
+            background: #000;
+            border: 1px solid var(--border);
+            padding: 20px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--secondary);
+            margin-top: 30px;
+        }
+
+        .log-line { margin-bottom: 8px; }
+        .log-line.error { color: var(--danger); }
+        .log-line.success { color: var(--secondary); font-weight: bold; }
+
+        /* Secret Link Red Herring / Hint */
+        .hint-text {
+            margin-top: 20px;
+            font-size: 11px;
+            color: var(--text-dim);
+            text-align: center;
+        }
+
+        .hint-text a {
+            color: #444;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .hint-text a:hover {
+            color: var(--primary);
+        }
+
+        /* Flag Modal */
+        #flag-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .flag-card {
+            background: var(--surface);
+            border: 2px solid var(--secondary);
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 0 50px rgba(0, 255, 102, 0.2);
+        }
+
+        .flag-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            color: var(--secondary);
+            margin-top: 20px;
+            background: rgba(0, 255, 102, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+
+        @media (max-width: 1000px) {
+            main { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+
+    <header>
+        <div class="brand">
+            <div class="brand-logo"><span>NG</span></div>
+            <div class="brand-text">
+                <h1>DEPLOY GATEWAY</h1>
+            </div>
+        </div>
+        <div class="status-badge">System: Operational</div>
+    </header>
+
+    <main>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Manual Deploy Control</div>
+                <div style="font-size: 11px; color: var(--text-dim);">GATEWAY_ID: NG-V3.1.4</div>
+            </div>
+
+            <div class="control-group">
+                <label>Environment Target</label>
+                <input type="text" class="input-field" value="production" readonly>
+            </div>
+
+            <div class="control-group">
+                <label>Deployment Secret (API_KEY)</label>
+                <input type="password" id="api-key" class="input-field" placeholder="Enter security key to authorize...">
+            </div>
+
+            <button id="deploy-btn" class="btn-deploy">Authorize & Deploy</button>
+
+            <div class="log-area" id="log-output">
+                <div class="log-line">> Connection established with NG-CORE-01</div>
+                <div class="log-line">> Ready for deployment authorization...</div>
+            </div>
+
+            <div class="hint-text">
+                Note: Developer secrets are managed via <a href="/.env" target="_blank">internal configuration archives</a>.
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">System Metrics</div>
+            </div>
+            <ul class="info-list">
+                <li class="info-item">
+                    <span class="info-label">Service</span>
+                    <span class="info-value">nullgrids-deploy</span>
+                </li>
+                <li class="info-item">
+                    <span class="info-label">Build Version</span>
+                    <span class="info-value">3.1.4-STABLE</span>
+                </li>
+                <li class="info-item">
+                    <span class="info-label">Uptime</span>
+                    <span id="uptime" class="info-value">14d 3h 22m</span>
+                </li>
+                <li class="info-item">
+                    <span class="info-label">Environment</span>
+                    <span class="info-value" style="color: var(--danger);">PRODUCTION</span>
+                </li>
+                <li class="info-item">
+                    <span class="info-label">Last Deploy</span>
+                    <span class="info-value">2026-04-19 12:04</span>
+                </li>
+            </ul>
+
+            <div style="margin-top: 30px;">
+                <label>Available Artifacts</label>
+                <div style="font-size: 12px; color: var(--text-dim); display: grid; gap: 8px;">
+                    <div>• <a href="/health" style="color: inherit;">health.json</a></div>
+                    <div>• <a href="/api/version" style="color: inherit;">version.json</a></div>
+                    <div>• <a href="/config.php" style="color: inherit;">config.php</a> (Legacy)</div>
+                    <div>• <a href="/backup.zip" style="color: inherit;">backup.zip</a> (Restricted)</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="flag-modal">
+        <div class="flag-card">
+            <h2 style="color: var(--secondary);">DEPLOYMENT AUTHORIZED</h2>
+            <p style="margin-top: 10px;">Security clearance verified. Accessing protected sequence...</p>
+            <div class="flag-text" id="flag-content"></div>
+            <button onclick="document.getElementById('flag-modal').style.display='none'" style="margin-top: 20px; background: transparent; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 10px 20px; cursor: pointer;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const deployBtn = document.getElementById('deploy-btn');
+        const apiKeyInput = document.getElementById('api-key');
+        const logOutput = document.getElementById('log-output');
+
+        function addLog(msg, type = '') {
+            const line = document.createElement('div');
+            line.className = 'log-line ' + type;
+            line.textContent = `> ${msg}`;
+            logOutput.appendChild(line);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        deployBtn.onclick = async () => {
+            const key = apiKeyInput.value.trim();
+            if (!key) {
+                addLog('CRITICAL ERROR: Deployment secret required.', 'error');
+                return;
+            }
+
+            addLog(`Authorizing with key: ${key.substring(0, 4)}****...`);
+            
+            try {
+                const response = await fetch('/api/deploy', {
+                    method: 'POST',
+                    headers: { 'X-API-Key': key }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    addLog('AUTHORIZATION GRANTED.', 'success');
+                    addLog('Initializing deployment sequence...');
+                    addLog('Fetching encrypted assets...');
+                    addLog('Flag recovered from secure vault.');
+                    
+                    document.getElementById('flag-content').textContent = data.flag;
+                    document.getElementById('flag-modal').style.display = 'flex';
+                } else {
+                    addLog(`AUTHORIZATION FAILED: ${data.error}`, 'error');
+                }
+            } catch (err) {
+                addLog('CONNECTION ERROR: Gateway timeout.', 'error');
+            }
+        };
+
+        // Live Uptime Update simulation
+        setInterval(() => {
+            // Just a bit of flair
+        }, 1000);
+    </script>
+</body>
+</html>

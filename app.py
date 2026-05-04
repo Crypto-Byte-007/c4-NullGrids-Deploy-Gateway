@@ -1,26 +1,14 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template
 import os
 
 app = Flask(__name__)
 FLAG = open("flag.txt").read().strip()
 
-# Simulated config endpoints — the "breach" was through a misconfigured debug route
+# ... (API endpoints remain the same) ...
+
 @app.route("/")
 def index():
-    return """
-    <html><head><title>NullGrids Deploy Service</title></head>
-    <body style='font-family:monospace;background:#0f0f0f;color:#ffcc00;padding:40px'>
-    <h1>NullGrids Deployment Gateway v3</h1>
-    <p>Status: <span style='color:#00ff00'>ONLINE</span></p>
-    <p>Endpoints:</p>
-    <ul>
-      <li>GET /health</li>
-      <li>GET /api/version</li>
-      <li>POST /api/deploy (requires API key)</li>
-    </ul>
-    <p style='color:#555;font-size:12px'>Build: nullgrids-deploy-3.1.4 | Env: production</p>
-    </body></html>
-    """
+    return render_template("index.html")
 
 @app.route("/health")
 def health():
